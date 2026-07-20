@@ -1,7 +1,7 @@
 # @title
 import requests
 import datetime
-import pytz
+from zoneinfo import ZoneInfo
 import time
 from IPython.display import display, HTML, clear_output
 
