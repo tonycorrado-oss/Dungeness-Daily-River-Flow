@@ -3,7 +3,6 @@ import requests
 import datetime
 from zoneinfo import ZoneInfo
 import time
-from IPython.display import display, HTML, clear_output
 
 # --- CONFIGURATION ---
 # USGS Gauge #12048000 (Dungeness River near Sequim, WA)
@@ -274,7 +273,7 @@ try:
 
         if flow is not None:
             clear_output(wait=True)
-            display(HTML(generate_html(flow, timestamp, GAUGE_ID)))
+            st.markdown(html_layout, unsafe_allow_html=True)
             time.sleep(60)  # Renew every 60 seconds
         else:
             print(f"Error fetching data: {timestamp}")
