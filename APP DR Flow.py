@@ -1,6 +1,5 @@
 import requests
 import datetime
-import pytz
 import time
 from IPython.display import display, HTML, clear_output
 
