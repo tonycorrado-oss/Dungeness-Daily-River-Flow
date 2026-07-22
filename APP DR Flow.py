@@ -1,8 +1,8 @@
-# @title
 import requests
 import datetime
-from zoneinfo import ZoneInfo
+import pytz
 import time
+from IPython.display import display, HTML, clear_output
 
 # --- CONFIGURATION ---
 # USGS Gauge #12048000 (Dungeness River near Sequim, WA)
@@ -19,6 +19,7 @@ def get_flow_status(flow):
         "bg_color": "white",
         "text": "Unknown Flow",
         "blink": False,
+        "blink_speed": "2s",
         "range_min": 0,
         "range_max": 100
     }
@@ -28,6 +29,7 @@ def get_flow_status(flow):
             "bg_color": "#FF0000",
             "text": "Extremely Low- Salmon Endangered",
             "blink": True,
+            "blink_speed": "2s",  # Blinks once every 2 seconds (0 - 62.5 CFS)
             "range_min": 0,
             "range_max": 62.5
         }
@@ -35,15 +37,17 @@ def get_flow_status(flow):
         status = {
             "bg_color": "#FFBF00",
             "text": "Critically Low- Withdrawals Reduced",
-            "blink": False,
+            "blink": True,
+            "blink_speed": "4s",  # Blinks once every 4 seconds (62.5 - 120 CFS)
             "range_min": 62.5,
             "range_max": 120
         }
     elif 120 < flow <= 238:
         status = {
-            "bg_color": "#CC9900",  # Changed to Dark Yellow
+            "bg_color": "#CC9900",  # Dark Yellow
             "text": "Low Flow - Conserve Water",
             "blink": False,
+            "blink_speed": "2s",
             "range_min": 120,
             "range_max": 238
         }
@@ -52,6 +56,7 @@ def get_flow_status(flow):
             "bg_color": "#0099FF",
             "text": "Adequate Flow",
             "blink": False,
+            "blink_speed": "2s",
             "range_min": 238,
             "range_max": 582
         }
@@ -60,6 +65,7 @@ def get_flow_status(flow):
             "bg_color": "#800080",
             "text": "High Flow",
             "blink": False,
+            "blink_speed": "2s",
             "range_min": 582,
             "range_max": 2700
         }
@@ -68,6 +74,7 @@ def get_flow_status(flow):
             "bg_color": "#FFBF00",
             "text": "Flood Alert",
             "blink": False,
+            "blink_speed": "2s",
             "range_min": 2700,
             "range_max": 4275
         }
@@ -76,6 +83,7 @@ def get_flow_status(flow):
             "bg_color": "#FF0000",
             "text": "Minor to Moderate Flood -Take Precautions",
             "blink": False,
+            "blink_speed": "2s",
             "range_min": 4275,
             "range_max": 6200
         }
@@ -84,6 +92,7 @@ def get_flow_status(flow):
             "bg_color": "#8B0000",
             "text": "Extreme Flooding – Evacuation May Be Necessary",
             "blink": True,
+            "blink_speed": "1s",
             "range_min": 6200,
             "range_max": 99999
         }
@@ -115,19 +124,19 @@ def generate_html(flow, timestamp, gauge_id):
     blink_animation = ""
 
     if status['blink']:
-        blink_keyframes = f"""
-        @keyframes blinker {{
-            0% {{ background-color: {status['bg_color']}; opacity: 1; }}
-            50% {{ background-color: #333333; opacity: 1; }}
-            100% {{ background-color: {status['bg_color']}; opacity: 1; }}
-        }}
+        blink_keyframes = """
+        @keyframes blinker {
+            0% { color: #FFFFFF; text-shadow: 1px 1px 2px black; }
+            50% { color: #000000; text-shadow: none; }
+            100% { color: #FFFFFF; text-shadow: 1px 1px 2px black; }
+        }
         """
-        blink_animation = "animation: blinker 2s linear infinite;"
+        blink_animation = f"animation: blinker {status['blink_speed']} linear infinite;"
 
     category_defs = [
         (0, 62.5, "#FF0000"),
         (62.5, 120, "#FFBF00"),
-        (120, 238, "#CC9900"),  # Changed to Dark Yellow
+        (120, 238, "#CC9900"),  # Dark Yellow
         (238, 582, "#0099FF"),
         (582, 2700, "#800080"),
         (2700, 4275, "#FFBF00"),
@@ -186,11 +195,17 @@ def generate_html(flow, timestamp, gauge_id):
             align-items: center;
             justify-content: center;
             border-radius: 10px;
-            {blink_animation}
         }}
 
         .main-text {{ font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center; }}
-        .flow-val {{ font-size: 24px; font-weight: bold; margin-bottom: 5px; }}
+        
+        .flow-val {{ 
+            font-size: 24px; 
+            font-weight: bold; 
+            margin-bottom: 5px; 
+            {blink_animation}
+        }}
+        
         .meta-info {{ font-size: 11px; margin-bottom: 2px; }}
 
         .graph-container {{
@@ -273,7 +288,7 @@ try:
 
         if flow is not None:
             clear_output(wait=True)
-            st.markdown(html_layout, unsafe_allow_html=True)
+            display(HTML(generate_html(flow, timestamp, GAUGE_ID)))
             time.sleep(60)  # Renew every 60 seconds
         else:
             print(f"Error fetching data: {timestamp}")
